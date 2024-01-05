@@ -24,8 +24,9 @@ class HAFMencoder(object):
     def adjacent_matrix(self, n, edges, device):
         mat = torch.zeros(n+1,n+1,dtype=torch.bool,device=device)
         if edges.size(0)>0:
-            mat[edges[:,0], edges[:,1]] = 1
-            mat[edges[:,1], edges[:,0]] = 1
+            edges = edges.long()
+            mat[edges[:,0], edges[:,1]] += True
+            mat[edges[:,1], edges[:,0]] += True
         return mat
 
     def _process_per_image(self,ann):
@@ -60,8 +61,8 @@ class HAFMencoder(object):
         
         pos_mat = self.adjacent_matrix(junctions.size(0),edges_positive,device)
         neg_mat = self.adjacent_matrix(junctions.size(0),edges_negative,device)        
-        lines = torch.cat((junctions[edges_positive[:,0]], junctions[edges_positive[:,1]]),dim=-1)
-        lines_neg = torch.cat((junctions[edges_negative[:2000,0]],junctions[edges_negative[:2000,1]]),dim=-1)
+        lines = torch.cat((junctions[edges_positive[:, 0].long()], junctions[edges_positive[:, 1].long()]), dim=-1)
+        lines_neg = torch.cat((junctions[edges_negative[:50,0].long()],junctions[edges_negative[:50,1].long()]),dim=-1)
         lmap, _, _ = _C.encodels(lines,height,width,height,width,lines.size(0))
 
         center_points = (lines[:,:2] + lines[:,2:])/2.0
